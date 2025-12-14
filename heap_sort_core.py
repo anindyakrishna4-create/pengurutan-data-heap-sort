@@ -1,4 +1,4 @@
-# File: heap_sort_core.py
+# File: heap_sort.py 
 
 # List global untuk menyimpan riwayat langkah
 HISTORY = []
@@ -16,16 +16,16 @@ def heap_sort(data_list):
     # 1. Fase Build Max-Heap
     HISTORY.append({'array': arr[:], 'highlight': (-1, -1, 'Build Heap'), 'action': 'Fase 1: Membangun Max Heap...'})
     
-    # Mulai dari parent terakhir yang mungkin (floor(n/2) - 1)
+    # Mulai dari parent terakhir (floor(n/2) - 1)
     for i in range(n // 2 - 1, -1, -1):
-        heapify(arr, n, i, True)
+        _heapify_down(arr, n, i)
 
     # 2. Fase Ekstraksi (Pengurutan)
     HISTORY.append({'array': arr[:], 'highlight': (-1, -1, 'Sort Start'), 'action': 'Fase 2: Ekstraksi dan Pengurutan Dimulai...'})
     
     for i in range(n - 1, 0, -1):
         
-        # Tukar elemen root (terbesar) dengan elemen terakhir dari heap saat ini
+        # Tukar elemen root (terbesar) dengan elemen terakhir dari heap saat ini (i)
         arr[i], arr[0] = arr[0], arr[i] 
         
         # Catat setelah Penukaran
@@ -35,42 +35,57 @@ def heap_sort(data_list):
             'action': f'Tukar Root ({arr[i]}) dengan Elemen Akhir Heap ({arr[0]}). Heap Size: {i}'
         })
         
-        # Panggil heapify pada sub-tree yang tersisa (mengabaikan elemen yang sudah diurutkan)
-        heapify(arr, i, 0, False)
+        # Panggil heapify pada sub-tree yang tersisa (ukuran heap adalah i)
+        _heapify_down(arr, i, 0)
 
     # Catat status Selesai
     HISTORY.append({'array': arr[:], 'highlight': (-1, -1, 'Selesai'), 'action': 'Pengurutan Selesai'})
     
     return arr, HISTORY
 
-def heapify(arr, n, i, is_build_phase):
+def _heapify_down(arr, n, i):
     """
     Prosedur untuk menstabilkan struktur heap pada sub-pohon berakar i.
+    n adalah ukuran heap saat ini.
     """
-    largest = i  # Inisialisasi root sebagai yang terbesar
-    left = 2 * i + 1     # indeks anak kiri
-    right = 2 * i + 2    # indeks anak kanan
+    largest = i  
+    left = 2 * i + 1     
+    right = 2 * i + 2    
 
-    # Jika anak kiri lebih besar dari root
+    # 1. Tentukan anak terbesar
     if left < n and arr[left] > arr[largest]:
         largest = left
 
-    # Jika anak kanan lebih besar dari yang terbesar sejauh ini
     if right < n and arr[right] > arr[largest]:
         largest = right
 
-    # Jika yang terbesar bukan root (i)
+    # 2. Jika yang terbesar bukan root (i), lakukan penukaran
     if largest != i:
         
         # Catat state saat Membandingkan dan sebelum Menukar
         HISTORY.append({
             'array': arr[:], 
-            'highlight': (i, largest, 'Bandingkan/Adjust'), # Root (i) dan yang terbesar (largest)
-            'action': f'Heapify: Bandingkan Indeks {i} dengan Indeks {largest}. Tukar.'
+            # i: root/parent, largest: anak yang terbesar
+            'highlight': (i, largest, 'Bandingkan/Adjust'), 
+            'action': f'Heapify: Bandingkan Indeks {i} ({arr[i]}) dengan Indeks {largest} ({arr[largest]}).'
         })
 
         # Tukar root dengan yang terbesar
         arr[i], arr[largest] = arr[largest], arr[i] 
+        
+        # Catat setelah penukaran
+        HISTORY.append({
+            'array': arr[:], 
+            'highlight': (i, largest, 'Tukar Node'), # i dan largest ditukar
+            'action': f'Tukar {arr[i]} dan {arr[largest]}. Lanjutkan Heapify.'
+        })
 
-        # Lanjutkan proses heapify secara rekursif ke sub-tree yang terdampak
-        heapify(arr, n, largest, is_build_phase)
+        # Rekursif ke sub-tree yang terdampak
+        _heapify_down(arr, n, largest)
+    elif largest == i and n != len(arr):
+        # Tambahkan catatan jika node sudah stabil (hanya saat fase sort)
+        HISTORY.append({
+            'array': arr[:], 
+            'highlight': (i, -1, 'Node Stabil'), 
+            'action': f'Node Indeks {i} stabil. Lanjut.'
+        })
