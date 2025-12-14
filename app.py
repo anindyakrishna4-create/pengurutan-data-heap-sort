@@ -1,311 +1,148 @@
+# File: app.py (KODE FINAL - Matplotlib)
+
 import streamlit as st
 import pandas as pd
 import time
-import random
+from heap_sort import heap_sort 
 import matplotlib.pyplot as plt
+import numpy as np
 
-# --- 1. Fungsi Inti Heap Sort ---
-
-def heapify(arr, n, i, steps, comparisons_count):
-    """
-    Prosedur untuk membentuk Max Heap dari subtree di indeks i.
-    """
-    largest = i  # Inisialisasi largest sebagai root
-    l = 2 * i + 1  # Indeks anak kiri
-    r = 2 * i + 2  # Indeks anak kanan
-    
-    current_step = {
-        'array': list(arr),
-        'highlight': [i, l if l < n else -1, r if r < n else -1],
-        'action': f"Membandingkan Node {arr[i]} dengan anak-anaknya"
-    }
-    steps.append(current_step)
-    
-    comparisons_count[0] += 1
-    # Jika anak kiri lebih besar dari root
-    if l < n and arr[l] > arr[largest]:
-        largest = l
-        
-    comparisons_count[0] += 1
-    # Jika anak kanan lebih besar dari root sekarang
-    if r < n and arr[r] > arr[largest]:
-        largest = r
-        
-    # Jika root bukan yang terbesar, tukar dan lanjutkan heapify
-    if largest != i:
-        arr[i], arr[largest] = arr[largest], arr[i] # Swap
-        
-        current_step = {
-            'array': list(arr),
-            'highlight': [i, largest],
-            'action': f"Menukar {arr[largest]} dan {arr[i]} untuk menjaga properti Max Heap"
-        }
-        steps.append(current_step)
-        
-        # Rekursif heapify subtree yang terpengaruh
-        heapify(arr, n, largest, steps, comparisons_count)
-
-def heap_sort(arr):
-    """
-    Fungsi utama Heap Sort.
-    """
-    n = len(arr)
-    steps = []
-    comparisons_count = [0]
-    
-    # 1. Membangun Max Heap (proses 'heapify' dari semua node non-leaf)
-    st.subheader("Fase 1: Membangun Max Heap")
-    
-    # Indeks node non-leaf terakhir
-    for i in range(n // 2 - 1, -1, -1):
-        heapify(arr, n, i, steps, comparisons_count)
-        
-    # 2. Ekstraksi elemen satu per satu dari heap
-    st.subheader("Fase 2: Ekstraksi dan Pengurutan")
-    for i in range(n - 1, 0, -1):
-        # Pindahkan root saat ini ke akhir
-        arr[i], arr[0] = arr[0], arr[i]
-        
-        current_step = {
-            'array': list(arr),
-            'highlight': [i, 0],
-            'action': f"Menukar root (terbesar) {arr[0]} dengan elemen terakhir yang belum diurutkan (indeks {i})"
-        }
-        steps.append(current_step)
-        
-        # Panggil heapify pada heap yang tersisa
-        heapify(arr, i, 0, steps, comparisons_count)
-        
-    return arr, steps, comparisons_count[0]
-
-# --- 2. Fungsi Visualisasi (Matplotlib) ---
-
-def plot_bar_chart(arr, highlight=None, title="Visualisasi Array"):
-    """
-    Membuat visualisasi bar chart untuk array.
-    """
-    fig, ax = plt.subplots(figsize=(10, 5))
-    colors = ['skyblue'] * len(arr)
-    
-    # Highlight elemen yang sedang diproses
-    if highlight:
-        for index in highlight:
-            if 0 <= index < len(arr):
-                colors[index] = 'salmon' # Warna untuk highlight
-    
-    # Membuat Bar Chart
-    bars = ax.bar(range(len(arr)), arr, color=colors)
-    ax.set_title(title)
-    ax.set_xticks(range(len(arr)))
-    ax.set_xticklabels([str(x) for x in arr])
-    ax.set_xlabel("Indeks")
-    ax.set_ylabel("Nilai")
-    
-    # Menambahkan nilai di atas bar
-    for bar in bars:
-        yval = bar.get_height()
-        ax.text(bar.get_x() + bar.get_width()/2, yval, round(yval, 2), ha='center', va='bottom')
-        
-    st.pyplot(fig)
-    plt.close(fig) # Penting untuk membebaskan memori
-
-# --- 3. Fungsi Uji Kinerja ---
-
-def run_performance_test(max_size=10000):
-    """
-    Menguji kinerja Heap Sort vs. algoritma lain (misalnya Python's built-in Timsort)
-    """
-    sizes = [10, 100, 500, 1000, 5000, max_size]
-    results = []
-    
-    st.info(f"Melakukan uji kinerja hingga {max_size} data. Mungkin membutuhkan waktu...")
-    
-    for size in sizes:
-        # Data acak
-        data = [random.randint(1, 1000) for _ in range(size)]
-        
-        # Test 1: Heap Sort
-        arr_heap = list(data)
-        start_time_heap = time.perf_counter()
-        
-        # Menggunakan versi heap_sort tanpa menyimpan steps untuk kinerja
-        def minimal_heap_sort(arr):
-            n = len(arr)
-            for i in range(n // 2 - 1, -1, -1):
-                # Ini hanya kerangka, implementasi penuh dengan comparison_count 
-                # akan lebih akurat, tapi ini cukup untuk perbandingan waktu.
-                # Untuk tujuan kinerja, kita panggil fungsi standar saja.
-                pass 
-            # Sebagai pengganti: gunakan tim sort untuk baseline
-            return sorted(arr) 
-
-        # Karena Heap Sort di atas mencatat langkah, kita pakai Timsort built-in 
-        # untuk perbandingan. Jika perlu metrik Heap Sort, kode perlu diubah.
-        # Untuk tujuan lab, kita bandingkan dengan Timsort (standar Python).
-        
-        # Uji Heap Sort (dengan minimal implementasi untuk mengukur waktu)
-        arr_heap_time = list(data)
-        n = len(arr_heap_time)
-        
-        # Implementasi minimal yang hanya mengukur waktu
-        def heap_sort_perf(arr, n):
-            def heapify_perf(arr, n, i):
-                largest = i
-                l = 2 * i + 1
-                r = 2 * i + 2
-                if l < n and arr[l] > arr[largest]:
-                    largest = l
-                if r < n and arr[r] > arr[largest]:
-                    largest = r
-                if largest != i:
-                    arr[i], arr[largest] = arr[largest], arr[i]
-                    heapify_perf(arr, n, largest)
-            
-            for i in range(n // 2 - 1, -1, -1):
-                heapify_perf(arr, n, i)
-            for i in range(n - 1, 0, -1):
-                arr[i], arr[0] = arr[0], arr[i]
-                heapify_perf(arr, i, 0)
-        
-        heap_sort_perf(arr_heap_time, n)
-        end_time_heap = time.perf_counter()
-        time_heap = (end_time_heap - start_time_heap) * 1000 # dalam ms
-        
-        # Test 2: Timsort (Built-in Python)
-        arr_timsort = list(data)
-        start_time_timsort = time.perf_counter()
-        arr_timsort.sort()
-        end_time_timsort = time.perf_counter()
-        time_timsort = (end_time_timsort - start_time_timsort) * 1000 # dalam ms
-        
-        results.append({
-            'Ukuran Data (N)': size,
-            'Heap Sort (ms)': time_heap,
-            'Timsort (ms)': time_timsort,
-        })
-        
-    df = pd.DataFrame(results)
-    
-    st.subheader("📊 Tabel Kinerja")
-    st.dataframe(df.set_index('Ukuran Data (N)'))
-    
-    st.subheader("📈 Grafik Perbandingan Waktu Eksekusi")
-    
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.plot(df['Ukuran Data (N)'], df['Heap Sort (ms)'], marker='o', label='Heap Sort')
-    ax.plot(df['Ukuran Data (N)'], df['Timsort (ms)'], marker='x', label='Timsort (Built-in Python)')
-    
-    ax.set_title('Perbandingan Waktu Eksekusi Berbagai Ukuran Data')
-    ax.set_xlabel('Ukuran Data (N)')
-    ax.set_ylabel('Waktu Eksekusi (ms)')
-    ax.legend()
-    ax.grid(True)
-    st.pyplot(fig)
-    plt.close(fig)
-
-# --- 4. Streamlit App Interface ---
-
-st.set_page_config(layout="wide", page_title="Virtual Lab: Heap Sort Interaktif")
-
-st.title("🔬 Virtual Lab: Algoritma Heap Sort")
-st.markdown("### Memahami Cara Kerja Pengurutan Data Heap Sort")
-
-st.sidebar.header("⚙️ Pengaturan Input Data")
-
-# Input pengguna
-input_type = st.sidebar.radio(
-    "Pilih Tipe Input:",
-    ("Acak (Random)", "Manual Input")
+# --- Konfigurasi Halaman ---
+st.set_page_config(
+    page_title="Virtual Lab: Heap Sort (Matplotlib)",
+    layout="wide"
 )
 
-initial_data = []
+st.title("🌲 Virtual Lab: Heap Sort Interaktif (Matplotlib)")
+st.markdown("### Visualisasi Algoritma Pengurutan Data (Max Heap)")
 
-if input_type == "Acak (Random)":
-    num_elements = st.sidebar.slider("Jumlah Elemen:", 5, 20, 10)
-    max_value = st.sidebar.number_input("Nilai Maksimum:", 10, 100, 50)
+st.sidebar.header("Konfigurasi Data")
+
+# --- Input Pengguna (Tanpa Batas Input) ---
+default_data = "45, 12, 90, 3, 55, 18, 70, 25, 60, 105"
+input_data_str = st.sidebar.text_input(
+    "Masukkan data (pisahkan dengan koma):", 
+    default_data
+)
+speed = st.sidebar.slider("Kecepatan Simulasi (detik)", 0.1, 2.0, 0.5)
+
+# --- Proses Data Input ---
+try:
+    data_list = [int(x.strip()) for x in input_data_str.split(',') if x.strip()]
+    initial_data = list(data_list)
+    if not initial_data:
+        st.error("Masukkan setidaknya satu angka.")
+        st.stop()
+except ValueError:
+    st.error("Masukkan data dalam format angka (integer) yang dipisahkan oleh koma (misalnya: 10, 5, 8).")
+    st.stop()
     
-    if st.sidebar.button("Generate Data Acak"):
-        initial_data = [random.randint(1, max_value) for _ in range(num_elements)]
-        st.session_state['data'] = initial_data
-    
-    if 'data' not in st.session_state or not st.session_state['data']:
-         st.session_state['data'] = [5, 13, 2, 25, 7, 17, 20, 8, 4] # Data default
-         
-    initial_data = st.session_state['data']
-
-else: # Manual Input
-    data_str = st.sidebar.text_area(
-        "Masukkan Data (pisahkan dengan koma):", 
-        "5, 13, 2, 25, 7, 17, 20, 8, 4"
-    )
-    try:
-        initial_data = [int(x.strip()) for x in data_str.split(',') if x.strip()]
-        if len(initial_data) < 2:
-            st.error("Masukkan minimal 2 angka.")
-            initial_data = []
-    except ValueError:
-        st.error("Pastikan semua input adalah angka.")
-        initial_data = []
-
-if initial_data:
-    st.header("Data Awal")
-    st.code(initial_data)
-    
-    data_to_sort = list(initial_data) # Salinan data untuk diurutkan
-    
-    if st.button("Mulai Proses Heap Sort"):
-        st.balloons()
-        
-        # Jalankan Heap Sort dan simpan langkah-langkahnya
-        start_time = time.perf_counter()
-        sorted_arr, steps, comparisons = heap_sort(data_to_sort)
-        end_time = time.perf_counter()
-        
-        execution_time = (end_time - start_time) * 1000 # dalam ms
-        
-        st.success("✅ Pengurutan Selesai!")
-        
-        # Tampilkan Metrik
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("Waktu Eksekusi (ms)", f"{execution_time:.4f}")
-        with col2:
-            st.metric("Total Perbandingan", f"{comparisons}")
-        
-        st.header("Detail Langkah Demi Langkah")
-        
-        # Slider interaktif untuk melihat setiap langkah
-        step_index = st.slider("Pilih Langkah", 0, len(steps) - 1, 0)
-        
-        current_step = steps[step_index]
-        
-        st.info(f"**Langkah {step_index + 1}/{len(steps)}:** {current_step['action']}")
-        
-        # Visualisasi Bar Chart
-        plot_bar_chart(
-            current_step['array'], 
-            current_step['highlight'], 
-            title=f"Langkah {step_index + 1}: {current_step['action']}"
-        )
-        
-        # Tampilkan array saat ini
-        st.code(current_step['array'])
-        
-        # Tampilkan Hasil Akhir
-        st.header("Hasil Akhir")
-        st.code(sorted_arr)
-        
-# --- 5. Bagian Uji Kinerja ---
-
-st.sidebar.markdown("---")
-st.sidebar.header("Uji Kinerja Komparatif")
-
-if st.sidebar.button("Jalankan Uji Kinerja Besar"):
-    st.header("Uji Kinerja Algoritma Pengurutan")
-    run_performance_test(max_size=10000)
-
-st.sidebar.markdown("""
----
-*Lab ini dibuat untuk tujuan edukasi. 
-Kode sumber dapat ditemukan di GitHub.*
+# --- Penjelasan ---
+st.markdown("""
+#### Pewarnaan Bar:
+* **Kuning (#F1C232):** Elemen **Root** atau **Parent** yang sedang disesuaikan.
+* **Hijau (#6AA84F):** Elemen yang baru saja **ditukar**.
+* **Merah (#CC0000):** Elemen yang sudah **terurut**.
 """)
+
+st.write(f"**Data Awal:** {initial_data}")
+
+# --- Fungsi Plot Matplotlib ---
+def plot_array(arr, highlight_data, sorted_boundary, max_val, action_type):
+    fig, ax = plt.subplots(figsize=(10, 4))
+    n = len(arr)
+    x_pos = np.arange(n)
+    
+    (idx1, idx2, _) = highlight_data
+
+    # Tentukan Warna untuk Setiap Batang
+    colors = ['#4A86E8'] * n  # Warna default (Biru)
+    
+    for i in range(n):
+        # 1. Merah (Terurut)
+        if i >= sorted_boundary and sorted_boundary != n:
+            colors[i] = '#CC0000'
+        # 2. Hijau (Ditukar)
+        elif action_type in ('Tukar Root', 'Tukar Node') and (i == idx1 or i == idx2):
+            colors[i] = '#6AA84F'
+        # 3. Kuning (Aktif/Parent)
+        elif action_type in ('Bandingkan/Adjust', 'Build Heap') and i == idx1:
+            colors[i] = '#F1C232'
+    
+    # Membuat Bar Plot
+    ax.bar(x_pos, arr, color=colors)
+    
+    # Menambahkan Label Angka di Atas Bar
+    for i, height in enumerate(arr):
+        ax.text(x_pos[i], height + max_val * 0.02, str(height), ha='center', va='bottom', fontsize=10)
+        
+    # Konfigurasi Grafik
+    ax.set_ylim(0, max_val * 1.1)
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels([f'Posisi {i}' for i in range(n)], rotation=0)
+    ax.set_ylabel('Nilai')
+    ax.set_title(f"Aksi: {action_type}")
+    
+    plt.close(fig) 
+    return fig
+
+
+# --- Visualisasi Utama ---
+if st.button("Mulai Simulasi Heap Sort"):
+    
+    sorted_data, history = heap_sort(list(data_list))
+    max_data_value = max(initial_data) if initial_data else 10 
+    
+    st.markdown("---")
+    st.subheader("Visualisasi Langkah Demi Langkah")
+    
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        vis_placeholder = st.empty()
+        status_placeholder = st.empty() 
+    with col2:
+        table_placeholder = st.empty()
+    
+    sorted_boundary = len(initial_data)
+    
+    # --- Loop Simulasi ---
+    for step, state in enumerate(history):
+        current_array = state['array']
+        (idx1, idx2, action_type) = state['highlight']
+        action = state['action']
+        
+        # PENTING: Perbarui batas terurut
+        if action_type == 'Tukar Root':
+            sorted_boundary = idx2 
+
+        # --- Tampilkan Grafik (Matplotlib) ---
+        fig_mpl = plot_array(current_array, state['highlight'], sorted_boundary, max_data_value, action_type)
+
+        with vis_placeholder.container():
+            st.pyplot(fig_mpl, clear_figure=True)
+        
+        # --- TABEL DATA ---
+        with table_placeholder.container():
+             df_table = pd.DataFrame({'Index': range(len(current_array)), 'Nilai': current_array})
+             st.markdown("##### Data Saat Ini (Tabel)")
+             st.dataframe(df_table.T, hide_index=True)
+
+        with status_placeholder.container():
+            st.info(f"**Langkah ke-{step+1}** | **Aksi:** {action}")
+            
+            if action_type == 'Selesai':
+                 st.success("Array telah terurut! Proses Heap Sort Selesai.")
+            elif action_type == 'Tukar Root':
+                 st.caption(f"Hijau: Root ditukar ke posisi terurut **{sorted_boundary}**. Lakukan Heapify pada sisa Heap.")
+            elif action_type == 'Bandingkan/Adjust':
+                 st.caption("Kuning: Parent/Node yang sedang disesuaikan (Heapify).")
+
+        # Jeda untuk simulasi
+        time.sleep(speed)
+
+    # --- Hasil Akhir Final (Dipastikan Tampil Setelah Loop Selesai) ---
+    st.balloons()
+    st.success(f"**Pengurutan Selesai!**")
+    st.write(f"**Data Terurut:** {sorted_data}")
+    st.info(f"Algoritma Heap Sort selesai dalam **{len(history)-1}** langkah visualisasi.")
