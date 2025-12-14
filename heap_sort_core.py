@@ -3,7 +3,7 @@
 # List global untuk menyimpan riwayat langkah
 HISTORY = []
 
-def heap_sort(data_list):
+def heap_sort_core(data_list):
     """
     Mengimplementasikan Heap Sort dan mencatat setiap langkah di HISTORY.
     """
