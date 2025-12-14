@@ -1,5 +1,3 @@
-# FILE: heap_sort_core.py
-
 def heapify(arr, n, i, steps):
     """
     Prosedur untuk menumpuk (heapify) sub-pohon berakar i. 
